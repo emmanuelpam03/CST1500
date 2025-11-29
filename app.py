@@ -12,6 +12,7 @@ pg = st.navigation(
         st.Page("pages/Dashboard.py"),
         st.Page("pages/Login.py"),
         st.Page("pages/Register.py"),
+        st.Page("pages/Analyzer.py"),
     ]
 )
 
