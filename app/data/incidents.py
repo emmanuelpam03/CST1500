@@ -1,6 +1,21 @@
 import pandas as pd
 from app.data.db import connect_database
 
+def migrate_incidents_from_file(file_path="DATA/cyber_incidents.csv"):
+    conn = connect_database()
+    cursor = conn.cursor()
+
+    with open(file_path, 'r') as f:
+        for line in f:
+            incident_id, timestamp, severity, category, status, description = line.strip().split(',')
+            cursor.execute("""
+                INSERT OR IGNORE INTO cyber_incidents
+                (date, incident_type, severity, status, description)
+                VALUES (?, ?, ?, ?, ?)
+            """, (timestamp, category, severity, status, description))
+    conn.commit()
+    conn.close()
+
 def insert_incident(date, incident_type, severity, status, description, reported_by=None):
     conn = connect_database()
     cursor = conn.cursor()
