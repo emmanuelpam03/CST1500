@@ -1,5 +1,20 @@
 from app.data.db import connect_database
 
+def migrate_tickets_from_file(file_path="DATA/it_tickets.csv"):
+    conn = connect_database()
+    cursor = conn.cursor()
+
+    with open(file_path, 'r') as f:
+        for line in f:
+            ticket_id, priority, status, subject, description, created_at, assigned_to, resolution_time_hours = line.strip().split(',')
+            cursor.execute("""
+                INSERT OR IGNORE INTO it_tickets
+                (ticket_id, priority, status, category, subject, description, created_date, assigned_to)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (ticket_id, priority, status, category, subject, description, created_date, assigned_to))
+    conn.commit()
+    conn.close()
+
 def insert_ticket(ticket_id, priority, status, category, subject, description, created_date, assigned_to=None):
     conn = connect_database()
     cursor = conn.cursor()
