@@ -7,6 +7,7 @@ if not st.session_state.get("logged_in"):
 st.title("Dashboard")
 st.write(f"Welcome, {st.session_state.get('username', 'User')}!")
 
+
 if st.button("Logout"):
     st.session_state["logged_in"] = False
     st.session_state["username"] = None

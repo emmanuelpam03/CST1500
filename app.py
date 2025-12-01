@@ -24,4 +24,8 @@ pg = st.navigation(
     ]
 )
 
+st.sidebar.page_link("pages/Dashboard.py", label="Dashboard")
+st.sidebar.page_link("pages/Analyzer.py", label="AI Incident Analyzer")
+
+
 pg.run()

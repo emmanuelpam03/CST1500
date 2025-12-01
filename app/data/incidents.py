@@ -4,15 +4,16 @@ from app.data.db import connect_database
 def migrate_incidents_from_file(file_path="DATA/cyber_incidents.csv"):
     conn = connect_database()
     cursor = conn.cursor()
-
-    with open(file_path, 'r') as f:
-        for line in f:
-            incident_id, timestamp, severity, category, status, description = line.strip().split(',')
+    
+    cursor.execute("SELECT COUNT(*) FROM cyber_incidents")
+    if cursor.fetchone()[0] == 0:
+        df = pd.read_csv(file_path)
+        for _, row in df.iterrows():
             cursor.execute("""
-                INSERT OR IGNORE INTO cyber_incidents
+                INSERT INTO cyber_incidents
                 (date, incident_type, severity, status, description)
                 VALUES (?, ?, ?, ?, ?)
-            """, (timestamp, category, severity, status, description))
+            """, (row['date'], row['incident_type'], row['severity'], row['status'], row['description']))
     conn.commit()
     conn.close()
 
