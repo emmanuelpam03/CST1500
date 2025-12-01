@@ -7,13 +7,15 @@ def migrate_incidents_from_file(file_path="DATA/cyber_incidents.csv"):
     
     cursor.execute("SELECT COUNT(*) FROM cyber_incidents")
     if cursor.fetchone()[0] == 0:
-        df = pd.read_csv(file_path)
-        for _, row in df.iterrows():
-            cursor.execute("""
-                INSERT INTO cyber_incidents
-                (date, incident_type, severity, status, description)
-                VALUES (?, ?, ?, ?, ?)
-            """, (row['date'], row['incident_type'], row['severity'], row['status'], row['description']))
+        with open(file_path, 'r') as f:
+            next(f)  # Skip the header line
+            for line in f:
+                incident_id, timestamp, severity, category, status, description = line.strip().split(',')
+                cursor.execute("""
+                    INSERT OR IGNORE INTO cyber_incidents
+                    (date, incident_type, severity, status, description)
+                    VALUES (?, ?, ?, ?, ?)
+                """, (timestamp, category, severity, status, description))
     conn.commit()
     conn.close()
 
