@@ -21,11 +21,13 @@ pg = st.navigation(
         st.Page("pages/Login.py"),
         st.Page("pages/Register.py"),
         st.Page("pages/Analyzer.py"),
+        st.Page("pages/Cyber.py"),
     ]
 )
 
 st.sidebar.page_link("pages/Dashboard.py", label="Dashboard")
 st.sidebar.page_link("pages/Analyzer.py", label="AI Incident Analyzer")
+st.sidebar.page_link("pages/Cyber.py", label="Cyber Dashboard")
 
 
 pg.run()

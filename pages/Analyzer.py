@@ -35,7 +35,7 @@ else:
 	if st.button("Analyze with AI", type="primary"):
 		with st.spinner("Analyzing incident..."):
 
-			client = genai.Client(api_key="PUT IN YOUR API KEY HERE")
+			client = genai.Client(api_key="AIzaSyBzj3vg1oreBaQ8lhFCxTuyU7X-Q6QPlOw")
 			model = "gemini-2.0-flash"
 
 			analysis_prompt = f"""
@@ -58,7 +58,6 @@ else:
 				contents=analysis_prompt,
 			)
 
-			st.success("Analysis complete!")
 			st.subheader("AI Analysis Results")
 
 			container = st.empty()
@@ -68,5 +67,3 @@ else:
 				if chunk.text:
 					full_reply += chunk.text
 					container.markdown(full_reply)
-			
-			st.success("Analysis complete!")
