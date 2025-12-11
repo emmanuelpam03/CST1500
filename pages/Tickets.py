@@ -1,6 +1,13 @@
 import streamlit as st
 import pandas as pd
-from app.data.tickets import get_all_tickets, insert_ticket as create_ticket
+from datetime import datetime
+from app.data.tickets import (
+    get_all_tickets,
+    get_ticket_by_id,
+    insert_ticket as create_ticket,
+    update_ticket,
+    delete_ticket,
+)
 
 # Redirect to login if not authenticated
 if not st.session_state.get("logged_in"):
@@ -43,39 +50,160 @@ counts.columns = ["priority", "count"]
 
 st.bar_chart(counts.set_index("priority")["count"])
 
-st.subheader("Create New Ticket")
+st.divider()
 
-with st.form("add_ticket_form", clear_on_submit=True):
-	import uuid
-	from datetime import datetime
-	
-	ticket_id = st.text_input("Ticket ID", value=f"TICKET-{uuid.uuid4().hex[:8].upper()}")
-	priority = st.selectbox("Priority", ["Low", "Medium", "High"])
-	status = st.selectbox("Status", ["Open", "In Progress", "Resolved", "Closed"])
-	category = st.text_input("Category")
-	subject = st.text_input("Subject")
-	description = st.text_area("Description")
-	created_date = st.date_input("Created Date", value=datetime.now().date())
-	assigned_to = st.text_input("Assigned To (optional)", value="")
+# Tabs for Create, Update, Delete
+tab1, tab2, tab3 = st.tabs(["Create Ticket", "Update Ticket", "Delete Ticket"])
 
-	submitted = st.form_submit_button("Create Ticket")
+with tab1:
+	st.subheader("Create New Ticket")
 
-	if submitted:
-		if not ticket_id or not description:
-			st.error("Ticket ID and Description are required!")
-		else:
-			try:
-				create_ticket(
-					ticket_id=ticket_id,
-					priority=priority,
-					status=status,
-					category=category if category else None,
-					subject=subject if subject else None,
-					description=description,
-					created_date=str(created_date),
-					assigned_to=assigned_to if assigned_to else None
-				)
-				st.success("Ticket created successfully!")
-				st.rerun()
-			except Exception as e:
-				st.error(f"Error creating ticket: {str(e)}")
+	with st.form("add_ticket_form", clear_on_submit=True):
+		import uuid
+		
+		ticket_id = st.text_input("Ticket ID", value=f"TICKET-{uuid.uuid4().hex[:8].upper()}")
+		priority = st.selectbox("Priority", ["Low", "Medium", "High"])
+		status = st.selectbox("Status", ["Open", "In Progress", "Resolved", "Closed"])
+		category = st.text_input("Category")
+		subject = st.text_input("Subject")
+		description = st.text_area("Description")
+		created_date = st.date_input("Created Date", value=datetime.now().date())
+		assigned_to = st.text_input("Assigned To (optional)", value="")
+
+		submitted = st.form_submit_button("Create Ticket")
+
+		if submitted:
+			if not ticket_id or not description:
+				st.error("Ticket ID and Description are required!")
+			else:
+				try:
+					create_ticket(
+						ticket_id=ticket_id,
+						priority=priority,
+						status=status,
+						category=category if category else None,
+						subject=subject if subject else None,
+						description=description,
+						created_date=str(created_date),
+						assigned_to=assigned_to if assigned_to else None
+					)
+					st.success("Ticket created successfully!")
+					st.rerun()
+				except Exception as e:
+					st.error(f"Error creating ticket: {str(e)}")
+
+with tab2:
+	st.subheader("Update Ticket")
+
+	# Get ticket IDs for selection
+	ticket_options = [
+		f"{row['ticket_id']}: {row.get('category', 'N/A')} - {row.get('priority', 'N/A')}"
+		for _, row in df.iterrows()
+	]
+
+	if ticket_options:
+		selected_ticket_label = st.selectbox(
+			"Select Ticket to Update",
+			options=ticket_options,
+			key="update_ticket_select",
+		)
+
+		if selected_ticket_label:
+			selected_ticket_id = selected_ticket_label.split(":")[0]
+			ticket = get_ticket_by_id(selected_ticket_id)
+
+			if ticket:
+				with st.form("update_ticket_form"):
+					# Parse date if it exists
+					current_date = ticket.get("created_date")
+					try:
+						if current_date:
+							date_obj = datetime.strptime(current_date, "%Y-%m-%d").date()
+						else:
+							date_obj = datetime.now().date()
+					except:
+						date_obj = datetime.now().date()
+
+					ticket_id_display = st.text_input("Ticket ID", value=ticket["ticket_id"], disabled=True)
+					priority = st.selectbox(
+						"Priority",
+						["Low", "Medium", "High"],
+						index=["Low", "Medium", "High"].index(ticket["priority"])
+						if ticket["priority"] in ["Low", "Medium", "High"]
+						else 0,
+					)
+					status = st.selectbox(
+						"Status",
+						["Open", "In Progress", "Resolved", "Closed"],
+						index=["Open", "In Progress", "Resolved", "Closed"].index(ticket["status"])
+						if ticket["status"] in ["Open", "In Progress", "Resolved", "Closed"]
+						else 0,
+					)
+					category = st.text_input("Category", value=ticket.get("category") or "")
+					subject = st.text_input("Subject", value=ticket.get("subject") or "")
+					description = st.text_area("Description", value=ticket.get("description") or "")
+					created_date = st.date_input("Created Date", value=date_obj)
+					assigned_to = st.text_input("Assigned To", value=ticket.get("assigned_to") or "")
+					resolved_date = st.date_input("Resolved Date (optional)", value=None)
+
+					submitted = st.form_submit_button("Update Ticket")
+
+					if submitted:
+						if not description:
+							st.error("Description is required!")
+						else:
+							try:
+								update_ticket(
+									ticket_id=selected_ticket_id,
+									priority=priority,
+									status=status,
+									category=category if category else None,
+									subject=subject if subject else None,
+									description=description,
+									created_date=str(created_date),
+									assigned_to=assigned_to if assigned_to else None,
+									resolved_date=str(resolved_date) if resolved_date else None,
+								)
+								st.success("Ticket updated successfully!")
+								st.rerun()
+							except Exception as e:
+								st.error(f"Error updating ticket: {str(e)}")
+	else:
+		st.info("No tickets available to update.")
+
+with tab3:
+	st.subheader("Delete Ticket")
+
+	# Get ticket IDs for selection
+	delete_options = [
+		f"{row['ticket_id']}: {row.get('category', 'N/A')} - {row.get('priority', 'N/A')}"
+		for _, row in df.iterrows()
+	]
+
+	if delete_options:
+		selected_delete_label = st.selectbox(
+			"Select Ticket to Delete",
+			options=delete_options,
+			key="delete_ticket_select",
+		)
+
+		if selected_delete_label:
+			selected_ticket_id = selected_delete_label.split(":")[0]
+			ticket = get_ticket_by_id(selected_ticket_id)
+
+			if ticket:
+				st.warning(f"Are you sure you want to delete Ticket ID {selected_ticket_id}?")
+				st.write(f"**Category:** {ticket.get('category', 'N/A')}")
+				st.write(f"**Priority:** {ticket.get('priority', 'N/A')}")
+				st.write(f"**Status:** {ticket.get('status', 'N/A')}")
+				st.write(f"**Description:** {ticket.get('description', 'N/A')}")
+
+				if st.button("Confirm Delete", type="primary", key="confirm_delete_ticket"):
+					try:
+						delete_ticket(selected_ticket_id)
+						st.success("Ticket deleted successfully!")
+						st.rerun()
+					except Exception as e:
+						st.error(f"Error deleting ticket: {str(e)}")
+	else:
+		st.info("No tickets available to delete.")

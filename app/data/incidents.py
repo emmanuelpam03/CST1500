@@ -55,6 +55,47 @@ def update_incident_status(incident_id, new_status):
     conn.close()
     return count
 
+def update_incident(incident_id, date=None, incident_type=None, severity=None, status=None, description=None, reported_by=None):
+    """
+    Update an incident. Only provided fields will be updated.
+    """
+    conn = connect_database()
+    cursor = conn.cursor()
+    
+    updates = []
+    params = []
+    
+    if date is not None:
+        updates.append("date = ?")
+        params.append(str(date))
+    if incident_type is not None:
+        updates.append("incident_type = ?")
+        params.append(incident_type)
+    if severity is not None:
+        updates.append("severity = ?")
+        params.append(severity)
+    if status is not None:
+        updates.append("status = ?")
+        params.append(status)
+    if description is not None:
+        updates.append("description = ?")
+        params.append(description)
+    if reported_by is not None:
+        updates.append("reported_by = ?")
+        params.append(reported_by)
+    
+    if updates:
+        params.append(incident_id)
+        query = f"UPDATE cyber_incidents SET {', '.join(updates)} WHERE id = ?"
+        cursor.execute(query, params)
+        conn.commit()
+        count = cursor.rowcount
+    else:
+        count = 0
+    
+    conn.close()
+    return count
+
 def delete_incident(incident_id):
     conn = connect_database()
     cursor = conn.cursor()

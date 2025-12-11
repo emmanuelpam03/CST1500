@@ -9,14 +9,14 @@ if not st.session_state.get("logged_in"):
     st.switch_page("pages/Login.py")
 
 st.title("Dashboard")
-username = st.session_state.get('username', 'User')
+username = st.session_state.get("username", "User")
 st.write(f"Welcome, {username}!")
 
 # Get current user's role (from session state or database)
 user_role = st.session_state.get("user_role")
 if not user_role:
     current_user = get_user_by_username(username)
-    user_role = current_user['role'] if current_user else 'user'
+    user_role = current_user["role"] if current_user else "user"
     st.session_state["user_role"] = user_role
 
 # Logout button
@@ -46,35 +46,37 @@ else:
 st.divider()
 
 # Users Management Section (Admin only)
-if user_role == 'admin':
+if user_role == "admin":
     st.subheader("User Management")
-    
+
     # Display users list
     st.write("**Users List**")
     users = list_users()
     if users:
         users_data = []
         for user in users:
-            users_data.append({
-                'ID': user['id'],
-                'Username': user['username'],
-                'Role': user['role'],
-                'Created At': user['created_at']
-            })
+            users_data.append(
+                {
+                    "ID": user["id"],
+                    "Username": user["username"],
+                    "Role": user["role"],
+                    "Created At": user["created_at"],
+                }
+            )
         users_df = pd.DataFrame(users_data)
         st.dataframe(users_df, use_container_width=True)
     else:
         st.info("No users found.")
-    
+
     # Create new user form
     st.write("**Create New User**")
     with st.form("create_user_form", clear_on_submit=True):
         new_username = st.text_input("Username")
         new_password = st.text_input("Password", type="password")
         new_role = st.selectbox("Role", ["user", "admin"], index=0)
-        
+
         submitted = st.form_submit_button("Create User")
-        
+
         if submitted:
             if not new_username or not new_password:
                 st.error("Username and password are required!")

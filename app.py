@@ -2,7 +2,7 @@ import streamlit as st
 import sqlite3
 from app.data.db import connect_database
 from app.data.schema import create_all_tables
-from app.services.user_service import migrate_users_from_file
+from app.services.user_service import migrate_users_from_file, ensure_default_admin
 from app.data.incidents import migrate_incidents_from_file
 from app.data.tickets import migrate_tickets_from_file
 from app.data.datasets import migrate_datasets_metadata_from_file
@@ -13,6 +13,9 @@ conn.close()
 
 # Migrate users from file
 migrate_users_from_file()
+
+# Ensure default admin exists if no admins are present
+ensure_default_admin()
 
 # Migrate incidents from file
 migrate_incidents_from_file()

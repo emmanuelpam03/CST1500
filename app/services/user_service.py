@@ -32,6 +32,52 @@ def login_user(username, password):
     else:
         return False, "Incorrect password."
 
+def ensure_default_admin():
+    """
+    Check if there are any admin users. If not, create a default admin.
+    Default admin: username='admin', password='admin'
+    """
+    conn = connect_database()
+    cursor = conn.cursor()
+    
+    # Check if any admin exists
+    cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'admin'")
+    admin_count = cursor.fetchone()[0]
+    
+    if admin_count == 0:
+        # Create default admin
+        default_username = "admin"
+        default_password = "admin"
+        
+        # Check if admin username already exists (as regular user)
+        cursor.execute("SELECT * FROM users WHERE username = ?", (default_username,))
+        existing_user = cursor.fetchone()
+        
+        if not existing_user:
+            # Hash password
+            hashed = bcrypt.hashpw(default_password.encode('utf-8'), bcrypt.gensalt())
+            password_hash = hashed.decode('utf-8')
+            
+            # Insert admin
+            cursor.execute(
+                "INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)",
+                (default_username, password_hash, 'admin')
+            )
+            conn.commit()
+            print(f"Created default admin user: username='{default_username}', password='{default_password}'")
+        else:
+            # Update existing user to admin
+            hashed = bcrypt.hashpw(default_password.encode('utf-8'), bcrypt.gensalt())
+            password_hash = hashed.decode('utf-8')
+            cursor.execute(
+                "UPDATE users SET password_hash = ?, role = 'admin' WHERE username = ?",
+                (password_hash, default_username)
+            )
+            conn.commit()
+            print(f"Updated existing user '{default_username}' to admin role")
+    
+    conn.close()
+
 def migrate_users_from_file(filepath=None):
     """
     Migrate users from DATA/users.txt into database.
