@@ -35,7 +35,7 @@ else:
 	if st.button("Analyze with AI", type="primary"):
 		with st.spinner("Analyzing incident..."):
 
-			client = genai.Client(api_key="AIzaSyBzj3vg1oreBaQ8lhFCxTuyU7X-Q6QPlOw")
+			client = genai.Client(api_key="AIzaSyDYJcoF063C84a3ZUlA7eFhWz9ref7FwpI")
 			model = "gemini-2.0-flash"
 
 			analysis_prompt = f"""

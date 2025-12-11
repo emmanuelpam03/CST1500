@@ -55,7 +55,6 @@ def create_it_tickets_table(conn):
             priority TEXT,
             status TEXT,
             category TEXT,
-            subject TEXT NOT NULL,
             description TEXT,
             created_date TEXT,
             resolved_date TEXT,

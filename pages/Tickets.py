@@ -1,11 +1,11 @@
 import streamlit as st
 import pandas as pd
-from app.data.incidents import get_all_incidents, insert_incident as create_incident
+from app.data.tickets import get_all_tickets, insert_ticket as create_ticket
 
-st.title("Cyber Dashboard")
+st.title("Tickets Dashboard")
 
 with st.spinner("Loading incidents..."):
-	raw = get_all_incidents()
+	raw = get_all_tickets()
 
 if isinstance(raw, pd.DataFrame):
 	df = raw.copy()
@@ -21,30 +21,33 @@ if df.empty:
 	st.error("No incidents found.")
 	st.stop()
 
-st.subheader("Cyber Incidents")
+st.subheader("Tickets")
 st.dataframe(df)
 
 
-st.subheader("Incidents by Type")
+st.subheader("Tickets by Priority")
 
-high_count = (df["severity"] == "High").sum()
+high_count = (df["priority"] == "High").sum()
 total_count = len(df)
 
 left, right = st.columns(2)
 left.metric("High", high_count)
 right.metric("Incidents", total_count)
 
-counts = df["severity"].value_counts().reset_index()
-counts.columns = ["severity", "count"]
+counts = df["priority"].value_counts().reset_index()
+counts.columns = ["priority", "count"]
 
-st.bar_chart(counts.set_index("severity")["count"])
+counts = df["priority"].value_counts().reset_index()
+counts.columns = ["priority", "count"]
 
-st.subheader("Add New Incident")
+st.bar_chart(counts.set_index("priority")["count"])
 
-with st.form("add_incident_form", clear_on_submit=True):
+st.subheader("Create New Ticket")
+
+with st.form("add_incident_form"):
 	date = st.date_input("Date")
 	incident_type = st.text_input("Incident Type")
-	severity = st.selectbox("Severity", ["Low", "Medium", "High"])
+	priority = st.selectbox("priority", ["Low", "Medium", "High"])
 	status = st.selectbox("Status", ["Open", "In Progress", "Resolved", "Closed"])
 	description = st.text_area("Description")
 
@@ -54,16 +57,12 @@ with st.form("add_incident_form", clear_on_submit=True):
 		new_incident = {
 			"date": date,
 			"incident_type": incident_type,
-			"severity": severity,
+			"priority": priority,
 			"status": status,
 			"description": description,
 			"reported_by": st.session_state.get("username"),
 		}
 
-		try:
-			create_incident(**new_incident)
-			st.success("Incident added.")
-		except:
-			st.error("Error occurred!")
-
+		create_incident(**new_incident)
+		st.success("Incident added.")
 		st.rerun()
