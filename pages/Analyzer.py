@@ -3,6 +3,10 @@ from app.data.incidents import get_all_incidents
 from google import genai
 from google.genai import types
 
+# Redirect to login if not authenticated
+if not st.session_state.get("logged_in"):
+    st.switch_page("pages/Login.py")
+
 st.title("All Incident Analyzer")
 
 with st.spinner("Loading incidents..."):

@@ -5,6 +5,7 @@ from app.data.schema import create_all_tables
 from app.services.user_service import migrate_users_from_file
 from app.data.incidents import migrate_incidents_from_file
 from app.data.tickets import migrate_tickets_from_file
+from app.data.datasets import migrate_datasets_metadata_from_file
 
 conn = connect_database()
 create_all_tables(conn)
@@ -19,6 +20,9 @@ migrate_incidents_from_file()
 # Migrate tickets from file
 migrate_tickets_from_file()
 
+# Migrate datasets_metadata from file
+migrate_datasets_metadata_from_file()
+
 pg = st.navigation(
     [
         st.Page("pages/Dashboard.py"),
@@ -27,6 +31,7 @@ pg = st.navigation(
         st.Page("pages/Analyzer.py"),
         st.Page("pages/Cyber.py"),
         st.Page("pages/Tickets.py"),
+        st.Page("pages/TicketAnalyzer.py"),
     ]
 )
 
@@ -34,6 +39,7 @@ st.sidebar.page_link("pages/Dashboard.py", label="Dashboard")
 st.sidebar.page_link("pages/Analyzer.py", label="AI Incident Analyzer")
 st.sidebar.page_link("pages/Cyber.py", label="Cyber Dashboard")
 st.sidebar.page_link("pages/Tickets.py", label="Tickets Dashboard")
+st.sidebar.page_link("pages/TicketAnalyzer.py", label="AI Ticket Analyzer")
 
 
 pg.run()
