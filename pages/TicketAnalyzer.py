@@ -46,8 +46,8 @@ else:
         if st.button("Analyze with AI", type="primary"):
             with st.spinner("Analyzing ticket..."):
                 try:
-                    client = genai.Client(api_key="AIzaSyDYJcoF063C84a3ZUlA7eFhWz9ref7FwpI")
-                    model = "gemini-2.0-flash"
+                    client = genai.Client(api_key="AIzaSyCLhSmlMo1GrKcifvi3TfRpoh1-vziXTq0")
+                    model = "gemini-2.5-flash"
 
                     analysis_prompt = f"""
                         Analyze the following IT ticket and provide insights and recommendations:
