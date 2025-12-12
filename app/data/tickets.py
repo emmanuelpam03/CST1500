@@ -1,5 +1,23 @@
 from app.data.db import connect_database
 import pandas as pd
+
+
+def ensure_ticket_schema():
+    """
+    Add missing columns (e.g., subject) to it_tickets table for older DBs.
+    Safe to run repeatedly.
+    """
+    conn = connect_database()
+    cursor = conn.cursor()
+
+    cursor.execute("PRAGMA table_info(it_tickets)")
+    cols = [row[1] for row in cursor.fetchall()]
+
+    if "subject" not in cols:
+        cursor.execute("ALTER TABLE it_tickets ADD COLUMN subject TEXT")
+
+    conn.commit()
+    conn.close()
 def migrate_tickets_from_file(file_path="DATA/it_tickets.csv"):
     conn = connect_database()
     cursor = conn.cursor()

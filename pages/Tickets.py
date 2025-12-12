@@ -97,7 +97,7 @@ with tab2:
 
 	# Get ticket IDs for selection
 	ticket_options = [
-		f"{row['ticket_id']}: {row.get('category', 'N/A')} - {row.get('priority', 'N/A')}"
+		f"{row['ticket_id']}: {row.get('status', 'N/A')} - {row.get('priority', 'N/A')}"
 		for _, row in df.iterrows()
 	]
 
@@ -113,38 +113,55 @@ with tab2:
 			ticket = get_ticket_by_id(selected_ticket_id)
 
 			if ticket:
+				ticket_dict = dict(ticket)
 				with st.form("update_ticket_form"):
 					# Parse date if it exists
-					current_date = ticket.get("created_date")
+					current_date = ticket_dict.get("created_date") or ticket_dict.get("created_at")
 					try:
 						if current_date:
-							date_obj = datetime.strptime(current_date, "%Y-%m-%d").date()
+							date_obj = datetime.strptime(str(current_date), "%Y-%m-%d").date()
 						else:
 							date_obj = datetime.now().date()
 					except:
 						date_obj = datetime.now().date()
 
-					ticket_id_display = st.text_input("Ticket ID", value=ticket["ticket_id"], disabled=True)
+					ticket_id_display = st.text_input("Ticket ID", value=ticket_dict.get("ticket_id", ""), disabled=True)
 					priority = st.selectbox(
 						"Priority",
 						["Low", "Medium", "High"],
-						index=["Low", "Medium", "High"].index(ticket["priority"])
-						if ticket["priority"] in ["Low", "Medium", "High"]
+						index=["Low", "Medium", "High"].index(ticket_dict.get("priority", ""))
+						if ticket_dict.get("priority") in ["Low", "Medium", "High"]
 						else 0,
 					)
 					status = st.selectbox(
 						"Status",
 						["Open", "In Progress", "Resolved", "Closed"],
-						index=["Open", "In Progress", "Resolved", "Closed"].index(ticket["status"])
-						if ticket["status"] in ["Open", "In Progress", "Resolved", "Closed"]
+						index=["Open", "In Progress", "Resolved", "Closed"].index(ticket_dict.get("status", ""))
+						if ticket_dict.get("status") in ["Open", "In Progress", "Resolved", "Closed"]
 						else 0,
 					)
-					category = st.text_input("Category", value=ticket.get("category") or "")
-					subject = st.text_input("Subject", value=ticket.get("subject") or "")
-					description = st.text_area("Description", value=ticket.get("description") or "")
+					category = st.text_input("Category", value=ticket_dict.get("category") or "")
+					subject = st.text_input("Subject", value=ticket_dict.get("subject") or "")
+					description = st.text_area("Description", value=ticket_dict.get("description") or "")
 					created_date = st.date_input("Created Date", value=date_obj)
-					assigned_to = st.text_input("Assigned To", value=ticket.get("assigned_to") or "")
-					resolved_date = st.date_input("Resolved Date (optional)", value=None)
+					assigned_to = st.text_input("Assigned To", value=ticket_dict.get("assigned_to") or "")
+
+					# Optional resolved date handling
+					resolved_date_val = ticket_dict.get("resolved_date")
+					try:
+						if resolved_date_val:
+							resolved_date_obj = datetime.strptime(str(resolved_date_val), "%Y-%m-%d").date()
+						else:
+							resolved_date_obj = None
+					except:
+						resolved_date_obj = None
+
+					set_resolved = st.checkbox("Set Resolved Date", value=bool(resolved_date_val))
+					resolved_date = (
+						st.date_input("Resolved Date", value=resolved_date_obj or datetime.now().date())
+						if set_resolved
+						else None
+					)
 
 					submitted = st.form_submit_button("Update Ticket")
 
@@ -176,7 +193,7 @@ with tab3:
 
 	# Get ticket IDs for selection
 	delete_options = [
-		f"{row['ticket_id']}: {row.get('category', 'N/A')} - {row.get('priority', 'N/A')}"
+		f"{row['ticket_id']}: {row.get('status', 'N/A')} - {row.get('priority', 'N/A')}"
 		for _, row in df.iterrows()
 	]
 
@@ -192,11 +209,12 @@ with tab3:
 			ticket = get_ticket_by_id(selected_ticket_id)
 
 			if ticket:
+				ticket_dict = dict(ticket)
 				st.warning(f"Are you sure you want to delete Ticket ID {selected_ticket_id}?")
-				st.write(f"**Category:** {ticket.get('category', 'N/A')}")
-				st.write(f"**Priority:** {ticket.get('priority', 'N/A')}")
-				st.write(f"**Status:** {ticket.get('status', 'N/A')}")
-				st.write(f"**Description:** {ticket.get('description', 'N/A')}")
+				st.write(f"**Category:** {ticket_dict.get('category', 'N/A')}")
+				st.write(f"**Priority:** {ticket_dict.get('priority', 'N/A')}")
+				st.write(f"**Status:** {ticket_dict.get('status', 'N/A')}")
+				st.write(f"**Description:** {ticket_dict.get('description', 'N/A')}")
 
 				if st.button("Confirm Delete", type="primary", key="confirm_delete_ticket"):
 					try:
